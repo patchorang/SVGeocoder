@@ -73,6 +73,12 @@ typedef NSUInteger SVGeocoderState;
     return geocoder;
 }
 
++ (SVGeocoder *)geocode:(NSString *)address bounds:(MKCoordinateRegion)bounds completion:(SVGeocoderCompletionHandler)block {
+    SVGeocoder *geocoder = [[self alloc] initWithAddress:address bounds:bounds completion:block];
+    [geocoder start];
+    return geocoder;
+}
+
 + (SVGeocoder *)geocode:(NSString *)address region:(CLRegion *)region completion:(SVGeocoderCompletionHandler)block {
     SVGeocoder *geocoder = [[self alloc] initWithAddress:address region:region completion:block];
     [geocoder start];
@@ -102,18 +108,21 @@ typedef NSUInteger SVGeocoderState;
     return [self initWithParameters:parameters completion:block];
 }
 
+- (SVGeocoder*)initWithAddress:(NSString *)address bounds:(MKCoordinateRegion)coordinateRegion completion:(SVGeocoderCompletionHandler)block {
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                       address, @"address",
+                                       [NSString stringWithFormat:@"%f,%f|%f,%f",
+                                        coordinateRegion.center.latitude-(coordinateRegion.span.latitudeDelta/2.0),
+                                        coordinateRegion.center.longitude-(coordinateRegion.span.longitudeDelta/2.0),
+                                        coordinateRegion.center.latitude+(coordinateRegion.span.latitudeDelta/2.0),
+                                        coordinateRegion.center.longitude+(coordinateRegion.span.longitudeDelta/2.0)], @"bounds", nil];
+    
+    return [self initWithParameters:parameters completion:block];
+}
 
 - (SVGeocoder*)initWithAddress:(NSString *)address region:(CLRegion *)region completion:(SVGeocoderCompletionHandler)block {
     MKCoordinateRegion coordinateRegion = MKCoordinateRegionMakeWithDistance(region.center, region.radius, region.radius);
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys: 
-                                       address, @"address", 
-                                       [NSString stringWithFormat:@"%f,%f|%f,%f", 
-                                            coordinateRegion.center.latitude-(coordinateRegion.span.latitudeDelta/2.0),
-                                            coordinateRegion.center.longitude-(coordinateRegion.span.longitudeDelta/2.0),
-                                            coordinateRegion.center.latitude+(coordinateRegion.span.latitudeDelta/2.0),
-                                            coordinateRegion.center.longitude+(coordinateRegion.span.longitudeDelta/2.0)], @"bounds", nil];
-    
-    return [self initWithParameters:parameters completion:block];
+    return [self initWithAddress:address bounds:coordinateRegion completion:block];
 }
 
 
